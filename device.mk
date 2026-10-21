@@ -54,9 +54,6 @@ AB_OTA_PARTITIONS ?= boot vendor_boot recovery vendor vendor_dlkm system system_
 PRODUCT_PACKAGES += update_engine \
     update_engine_client \
     update_verifier \
-    android.hardware.boot@1.2-impl-qti \
-    android.hardware.boot@1.2-impl-qti.recovery \
-    android.hardware.boot@1.2-service
 
 PRODUCT_PACKAGES += \
   update_engine_sideload
