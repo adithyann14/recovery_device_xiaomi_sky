@@ -1,0 +1,7 @@
+<manifest version="1.0" type="device">
+    <hal format="aidl">
+        <name>vendor.qti.hardware.qteeconnector</name>
+        <fqname>IAppConnector/default</fqname>
+        <fqname>IGPAppConnector/default</fqname>
+    </hal>
+</manifest>
