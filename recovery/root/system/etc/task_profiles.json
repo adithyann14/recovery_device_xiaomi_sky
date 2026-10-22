@@ -11,15 +11,23 @@
       "File": "foreground/cpus"
     },
     {
+      "Name": "HighCapacityWICPUs",
+      "Controller": "cpuset",
+      "File": "foreground_window/cpus"
+    },
+    {
       "Name": "MaxCapacityCPUs",
       "Controller": "cpuset",
       "File": "top-app/cpus"
     },
+    // Xiaomi task_profiles.json for QCOM platform
+    // MIUI ADD: Performance_MemoryEnhance
     {
       "Name": "AudioAppCapacityCPUs",
       "Controller": "cpuset",
       "File": "audio-app/cpus"
     },
+    // END Performance_MemoryEnhance
     {
       "Name": "MemStats",
       "Controller": "memory",
@@ -81,6 +89,11 @@
       "Name": "FreezerState",
       "Controller": "freezer",
       "File": "cgroup.freeze"
+    },
+    {
+      "Name": "CgroupProcs",
+      "Controller": "cgroup2",
+      "File": "cgroup.procs"
     }
   ],
 
@@ -164,6 +177,19 @@
       ]
     },
     {
+      "Name": "HighPerformanceWI",
+      "Actions": [
+        {
+          "Name": "JoinCgroup",
+          "Params":
+          {
+            "Controller": "cpu",
+            "Path": "foreground_window"
+          }
+        }
+      ]
+    },
+    {
       "Name": "MaxPerformance",
       "Actions": [
         {
@@ -176,6 +202,21 @@
         }
       ]
     },
+// MIUI ADD: Performance_SpeedUI
+    {
+      "Name": "MISFPerformance",
+      "Actions": [
+        {
+          "Name": "JoinCgroup",
+          "Params":
+          {
+            "Controller": "cpu",
+            "Path": "misf"
+          }
+        }
+      ]
+    },
+// END Performance_SpeedUI
     {
       "Name": "RealtimePerformance",
       "Actions": [
@@ -185,6 +226,19 @@
           {
             "Controller": "cpu",
             "Path": "rt"
+          }
+        }
+      ]
+    },
+    {
+      "Name": "RealTimeInputScheduling",
+      "Actions": [
+        {
+          "Name": "SetSchedulerPolicy",
+          "Params":
+          {
+            "Policy": "SCHED_FIFO",
+            "Priority": "2"
           }
         }
       ]
@@ -202,19 +256,7 @@
         }
       ]
     },
-    {
-      "Name": "CameraPreviewPerformance",
-      "Actions": [
-        {
-          "Name": "JoinCgroup",
-          "Params":
-          {
-            "Controller": "cpu",
-            "Path": "camera-daemon/limit-level1"
-          }
-        }
-      ]
-    },
+    // MIUI ADD: Performance_MemoryEnhance
     {
       "Name": "AudioAppPerformance",
       "Actions" : [
@@ -228,6 +270,7 @@
         }
       ]
     },
+    // END Performance_MemoryEnhance
     {
       "Name": "NNApiHALPerformance",
       "Actions": [
@@ -254,6 +297,47 @@
         }
       ]
     },
+// MIUI ADD: Performance_PerformanceEnhance
+    {
+      "Name": "DisplayPerformance",
+      "Actions": [
+        {
+          "Name": "JoinCgroup",
+          "Params":
+          {
+            "Controller": "cpu",
+            "Path": "display"
+          }
+        }
+      ]
+    },
+    {
+      "Name": "AudioPerformance",
+      "Actions": [
+        {
+          "Name": "JoinCgroup",
+          "Params":
+          {
+            "Controller": "cpu",
+            "Path": "audio"
+          }
+        }
+      ]
+    },
+    {
+      "Name": "TouchPerformance",
+      "Actions": [
+        {
+          "Name": "JoinCgroup",
+          "Params":
+          {
+            "Controller": "cpu",
+            "Path": "touch"
+          }
+        }
+      ]
+    },
+// END Performance_PerformanceEnhance
     {
       "Name": "CpuPolicySpread",
       "Actions": [
@@ -413,6 +497,19 @@
       ]
     },
     {
+      "Name": "ProcessCapacityHighWI",
+      "Actions": [
+        {
+          "Name": "JoinCgroup",
+          "Params":
+          {
+            "Controller": "cpuset",
+            "Path": "foreground_window"
+          }
+        }
+      ]
+    },
+    {
       "Name": "ProcessCapacityMax",
       "Actions": [
         {
@@ -425,7 +522,21 @@
         }
       ]
     },
-
+// MIUI ADD: Performance_SpeedUI
+    {
+      "Name": "ProcessCapacityMISF",
+      "Actions": [
+        {
+          "Name": "JoinCgroup",
+          "Params":
+          {
+            "Controller": "cpuset",
+            "Path": "misf"
+          }
+        }
+      ]
+    },
+// END Performance_SpeedUI
     {
       "Name": "ServiceCapacityLow",
       "Actions": [
@@ -452,6 +563,7 @@
         }
       ]
     },
+
     {
       "Name": "CameraServiceCapacity",
       "Actions": [
@@ -465,6 +577,7 @@
         }
       ]
     },
+    // MIUI ADD: Performance_MemoryEnhance
     {
       "Name": "AudioAppCapacity",
       "Actions" : [
@@ -505,6 +618,7 @@
         }
       ]
     },
+    // END Performance_MemoryEnhance
     {
       "Name": "LowIoPriority",
       "Actions": [
@@ -611,33 +725,6 @@
     },
 
     {
-      "Name": "PerfBoost",
-      "Actions": [
-        {
-          "Name": "SetClamps",
-          "Params":
-          {
-            "Boost": "50%",
-            "Clamp": "0"
-          }
-        }
-      ]
-    },
-    {
-      "Name": "PerfClamp",
-      "Actions": [
-        {
-          "Name": "SetClamps",
-          "Params":
-          {
-            "Boost": "0",
-            "Clamp": "30%"
-          }
-        }
-      ]
-    },
-
-    {
       "Name": "LowMemoryUsage",
       "Actions": [
         {
@@ -645,7 +732,7 @@
           "Params":
           {
             "Name": "MemSoftLimit",
-            "Value": "16MB"
+            "Value": "16M"
           }
         },
         {
@@ -667,7 +754,7 @@
           "Params":
           {
             "Name": "MemSoftLimit",
-            "Value": "512MB"
+            "Value": "512M"
           }
         },
         {
@@ -693,6 +780,20 @@
         }
       ]
     },
+    // MIUI ADD: Performance_MemoryEnhance
+    {
+      "Name": "MemoryProtectedProcess",
+      "Actions": [
+        {
+          "Name": "JoinCgroup",
+          "Params":
+          {
+            "Controller": "memory",
+            "Path": "protected-app"
+          }
+        }
+      ]
+    },
     {
       "Name": "MemoryFreezeProcess",
       "Actions": [
@@ -706,6 +807,7 @@
         }
       ]
     }
+    // END Performance_MemoryEnhance
   ],
 
   "AggregateProfiles": [
@@ -720,6 +822,24 @@
     {
       "Name": "SCHED_SP_FOREGROUND",
       "Profiles": [ "HighPerformance", "HighIoPriority", "TimerSlackNormal" ]
+    },
+// MIUI ADD: Performance_PerformanceEnhance
+    {
+      "Name": "SCHED_SP_DISPLAY",
+      "Profiles": [ "DisplayPerformance", "HighIoPriority", "TimerSlackNormal" ]
+    },
+    {
+      "Name": "SCHED_SP_AUDIO",
+      "Profiles": [ "AudioPerformance", "HighIoPriority", "TimerSlackNormal" ]
+    },
+    {
+      "Name": "SCHED_SP_TOUCH",
+      "Profiles": [ "TouchPerformance", "HighIoPriority", "TimerSlackNormal" ]
+    },
+// END Performance_PerformanceEnhance
+    {
+      "Name": "SCHED_SP_FOREGROUND_WINDOW",
+      "Profiles": [ "HighPerformanceWI", "HighIoPriority", "TimerSlackNormal" ]
     },
     {
       "Name": "SCHED_SP_TOP_APP",
@@ -750,6 +870,10 @@
       "Profiles": [ "HighPerformance", "ProcessCapacityHigh", "HighIoPriority", "TimerSlackNormal" ]
     },
     {
+      "Name": "CPUSET_SP_FOREGROUND_WINDOW",
+      "Profiles": [ "HighPerformanceWI", "ProcessCapacityHighWI", "HighIoPriority", "TimerSlackNormal" ]
+    },
+    {
       "Name": "CPUSET_SP_TOP_APP",
       "Profiles": [ "MaxPerformance", "ProcessCapacityMax", "MaxIoPriority", "TimerSlackNormal" ]
     },
@@ -772,6 +896,12 @@
     {
       "Name": "OtaProfiles",
       "Profiles": [ "ServiceCapacityLow", "LowIoPriority", "HighEnergySaving" ]
+    },
+//MIUI ADD: Performance_BoostFramework
+    {
+      "Name": "InputPolicy",
+      "Profiles": [ "MaxPerformance", "ProcessCapacityMax", "TimerSlackNormal" ]
     }
+//END Performance_BoostFramework
   ]
 }
