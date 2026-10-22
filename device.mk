@@ -82,6 +82,8 @@ PRODUCT_SHIPPING_API_LEVEL := 31
 #Support to compile recovery without msm headers
 TARGET_HAS_GENERIC_KERNEL_HEADERS := true
 
+#Fix kernel image not found error 
+PRODUCT_OTA_ENFORCE_VINTF_KERNEL_REQUIREMENTS := false   
 # tell update_engine to not change dynamic partition table during updates
 # needed since our qti_dynamic_partitions does not include
 # vendor and odm and we also dont want to AB update them
