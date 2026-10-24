@@ -1,5 +1,5 @@
 # OrangeFox Device Tree for Xiaomi Redmi Note 12R/Redmi 12 5G/POCO M6 Pro 5G (sky)[](https://github.com/sm4450-development/device_xiaomi_sky/README.md#spec-sheet)
-
+ 
 ## Spec Sheet
 
 | Feature | Specification |
