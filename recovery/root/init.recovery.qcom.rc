@@ -72,3 +72,15 @@ on property:twrp.modules.loaded=true
 #    write /sys/class/leds/vibrator/trigger "transient"
 #    start vendor.qti.vibrator
 
+# Qualcomm EGL imports gralloc-native buffers. Keep the stock allocator in an
+# init-managed process so AERA's Adreno renderer can import the KMS buffers.
+service aera-graphics-allocator /vendor/bin/hw/vendor.qti.hardware.display.allocator-service
+    class hal
+    seclabel u:r:recovery:s0
+    user root
+    group root graphics
+    capabilities SYS_NICE
+    setenv LD_LIBRARY_PATH /vendor/lib64:/vendor/lib64/hw:/system/lib64:/sbin
+    # Do not spin every five seconds if a vendor/runtime mismatch prevents
+    # registration. A healthy allocator stays resident after its first start.
+    oneshot
