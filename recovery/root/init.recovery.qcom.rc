@@ -89,6 +89,7 @@ service aera-graphics-allocator /vendor/bin/hw/vendor.qti.hardware.display.alloc
     user root
     group root graphics
     capabilities SYS_NICE
+    setenv LD_LIBRARY_PATH /vendor/lib64:/vendor/lib64/hw:/system/lib64:/sbin
     # Do not spin every five seconds if a vendor/runtime mismatch prevents
     # registration. A healthy allocator stays resident after its first start.
     oneshot
