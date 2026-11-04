@@ -21,9 +21,6 @@ export AERA_LOCAL_CALLBACK_SCRIPT="$DIV_DIR/custom/scripts.sh"
  
 export ALLOW_MISSING_DEPENDENCIES=true
 
-export AERA_SETTINGS_ROOT_DIRECTORY=/virtual_sd/recovery
-export AERA_MISCELLANEOUS_ROOT_DIRECTORY=/virtual_sd/recovery
-
 # Debugging Flags
 # export AERA_RESET_SETTINGS=0
 # export AERA_INSTALLER_DEBUG_MODE=1
