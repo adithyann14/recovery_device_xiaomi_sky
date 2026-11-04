@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 #include "session.hpp"
+#include "dbgconf.hpp"
 
 namespace aera::mobile::sky {
 std::map<unsigned,std::string> Session::SimIdentities(QmiClient &uim) {
@@ -390,8 +391,29 @@ void Session::StartModem() {
   Log("Mounting the active-slot modemfirmware partition read-only");
   PrepareFirmware();CheckCancelled();
   Log("Validated image/modem.mdt; starting RMTFS and TFTP helpers");
-  rmtfs=Spawn("aera-mobile-rmtfs",{"-r","-P","-o","/dev/block/bootdevice/by-name"});
-  tftp=Spawn("aera-mobile-tftp",{"-d"});
+  {
+    // Runtime debug switches (see dbgconf.hpp / aera-dbg): helper binary and arguments.
+    std::string rmtfs_bin=DbgGet("rmtfs_bin","aera-mobile-rmtfs");
+    if(rmtfs_bin!="aera-mobile-rmtfs"&&rmtfs_bin!="aera-mobile-rmtfs-stock")rmtfs_bin="aera-mobile-rmtfs";
+    std::vector<std::string> rmtfs_args;
+    if(DbgGet("rmtfs_verbose","1")=="1")rmtfs_args.push_back("-v");
+    for(const char *arg:{"-r","-P","-o","/dev/block/bootdevice/by-name"})rmtfs_args.push_back(arg);
+    const std::string rmtfs_extra=DbgGet("rmtfs_args","");
+    for(std::string::size_type at=0;at<rmtfs_extra.size();) {
+      const std::string::size_type next=rmtfs_extra.find(' ',at);
+      const std::string word=rmtfs_extra.substr(at,next==std::string::npos?std::string::npos:next-at);
+      if(!word.empty())rmtfs_args.push_back(word);
+      if(next==std::string::npos)break;
+      at=next+1;
+    }
+    std::vector<std::string> tftp_args;
+    if(DbgGet("tftp_verbose","1")=="1")tftp_args.push_back("-d");
+    Log("debug: helper="+rmtfs_bin+" rmtfs_verbose="+DbgGet("rmtfs_verbose","1")+
+        " rmtfs_reply="+DbgGet("rmtfs_reply","off")+" discover_attempts="+
+        std::to_string(DbgInt("discover_attempts",120,1,1200)));
+    rmtfs=Spawn(rmtfs_bin,rmtfs_args);
+    tftp=Spawn("aera-mobile-tftp",tftp_args);
+  }
   Delay(700);CheckHelpers();
   // Storage/RFS services must be registered before remoteproc boots firmware.
   bool ready=false;
@@ -476,7 +498,8 @@ void Session::ConnectData(const std::string &apn,int subscription) {
   Log("MSS running; discovering QMI DMS/NAS/WDS/UIM/WDA/DPM");
   std::vector<Endpoint> endpoints;Endpoint nase;
   bool found=false;
-  for(int attempt=0;attempt<24&&!found;++attempt) {
+  const int discover_max=DbgInt("discover_attempts",120,1,1200);
+  for(int attempt=0;attempt<discover_max&&!found;++attempt) {
     CheckCancelled();CheckHelpers();
     try {
       endpoints=Discover(&cancel);
@@ -484,7 +507,16 @@ void Session::ConnectData(const std::string &apn,int subscription) {
       for(uint32_t service:{1u,2u,11u,26u,47u})Find(endpoints,service,nase.node);
       found=true;
     }catch(const std::exception &) {
-      CheckCancelled();if(attempt==23)throw;
+      CheckCancelled();
+      if(attempt%10==9||attempt==discover_max-1) {
+        std::string dump="QRTR services seen (attempt "+std::to_string(attempt+1)+"):";
+        for(const auto &e:endpoints)
+          dump+=" [svc "+std::to_string(e.service)+" inst "+std::to_string(e.instance)+
+                " node "+std::to_string(e.node)+"]";
+        if(endpoints.empty())dump+=" none";
+        Log(dump);
+      }
+      if(attempt==discover_max-1)throw;
       Delay(500);
     }
   }

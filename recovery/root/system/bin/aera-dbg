@@ -1,0 +1,94 @@
+#!/system/bin/sh
+# aera-dbg - runtime debug switches for the sky cellular provider (no rebuild needed).
+# Config file: /tmp/aera-dbg.conf (lost on reboot; use "save" to keep a copy on /sdcard).
+# Switches are read when the SIM menu starts the modem, so set them BEFORE opening it.
+
+CONF=${AERA_DBG_CONF:-/tmp/aera-dbg.conf}
+PERSIST=${AERA_DBG_PERSIST:-/sdcard/aera-dbg.conf}
+LOGDIR=${AERA_DBG_LOGDIR:-/tmp/aera-cellular}
+BIN=${AERA_DBG_BIN:-/system/bin}
+
+usage() {
+cat <<'USAGE'
+aera-dbg show                 show current switches and provider state
+aera-dbg set <key> <value>    set one switch        (aera-dbg unset <key> removes it)
+aera-dbg preset <name>        baseline | reply-ok | reply-err | stock-rmtfs | long-wait
+aera-dbg reset                delete all switches (back to defaults)
+aera-dbg save | load          copy config to / from /sdcard/aera-dbg.conf (survives reboot)
+aera-dbg logs start | stop    copy aera logs + logcat + dmesg to /sdcard/aera-logs-*
+aera-dbg pstore               copy /sys/fs/pstore (kernel crash logs after a freeze) to /sdcard
+aera-dbg status               provider status.json + last lines of the helper logs
+
+Switches (key = default):
+  rmtfs_reply     = off      off | ok | err   answer rmtfs "unknown request 7" (off = log only)
+  rmtfs_bin       = aera-mobile-rmtfs   or aera-mobile-rmtfs-stock (no reply hooks at all)
+  rmtfs_verbose   = 1        1 adds -v to rmtfs
+  rmtfs_args      = (empty)  extra rmtfs arguments, space separated (e.g. -s)
+  tftp_verbose    = 1        1 adds -d to tqftpserv
+  discover_attempts = 120    how many 0.5 s tries to find the modem's NAS service
+USAGE
+}
+
+setkey() { # key value
+  touch "$CONF" 2>/dev/null
+  grep -v "^$1[[:space:]]*=" "$CONF" > "$CONF.new" 2>/dev/null
+  echo "$1=$2" >> "$CONF.new"
+  mv -f "$CONF.new" "$CONF"
+}
+
+case "$1" in
+  set)
+    [ -n "$2" ] && [ -n "$3" ] || { usage; exit 1; }
+    setkey "$2" "$3"; echo "$2=$3"
+    ;;
+  unset)
+    [ -n "$2" ] || { usage; exit 1; }
+    grep -v "^$2[[:space:]]*=" "$CONF" > "$CONF.new" 2>/dev/null; mv -f "$CONF.new" "$CONF"
+    ;;
+  preset)
+    case "$2" in
+      baseline)    : > "$CONF"; setkey rmtfs_reply off ;;
+      reply-ok)    : > "$CONF"; setkey rmtfs_reply ok ;;
+      reply-err)   : > "$CONF"; setkey rmtfs_reply err ;;
+      stock-rmtfs) : > "$CONF"; setkey rmtfs_bin aera-mobile-rmtfs-stock ;;
+      long-wait)   : > "$CONF"; setkey rmtfs_reply off; setkey discover_attempts 300 ;;
+      *) usage; exit 1 ;;
+    esac
+    echo "preset $2 ->"; cat "$CONF"
+    ;;
+  reset)
+    rm -f "$CONF"; echo "switches cleared (defaults)"
+    ;;
+  save)
+    cp "$CONF" "$PERSIST" && echo "saved to $PERSIST"
+    ;;
+  load)
+    cp "$PERSIST" "$CONF" && echo "loaded from $PERSIST"
+    ;;
+  show|"")
+    echo "== $CONF"; cat "$CONF" 2>/dev/null || echo "(none - all defaults)"
+    [ -f "$PERSIST" ] && { echo "== $PERSIST"; cat "$PERSIST"; }
+    echo "== provider"; cat "$LOGDIR/status.json" 2>/dev/null || echo "(no status.json yet)"
+    ;;
+  status)
+    cat "$LOGDIR/status.json" 2>/dev/null; echo
+    for f in provider aera-mobile-rmtfs aera-mobile-rmtfs-stock aera-mobile-tftp; do
+      [ -f "$LOGDIR/$f.log" ] && { echo "== $f.log"; tail -n 15 "$LOGDIR/$f.log"; }
+    done
+    ;;
+  logs)
+    case "$2" in
+      start) nohup sh "$BIN/aera_logcopy.sh" >/dev/null 2>&1 & echo "log copy started (see /sdcard/aera-logs-*)" ;;
+      stop)  sh "$BIN/aera_logcopy.sh" stop ;;
+      *) usage; exit 1 ;;
+    esac
+    ;;
+  pstore)
+    D="${AERA_DBG_OUT:-/sdcard}/pstore-$(date +%Y%m%d_%H%M%S)"
+    mkdir -p "$D" && cp -r /sys/fs/pstore/. "$D"/ 2>/dev/null
+    ls -la "$D"; [ -f /proc/last_kmsg ] && cp /proc/last_kmsg "$D"/
+    echo "copied to $D"
+    ;;
+  help|-h|--help) usage ;;
+  *) usage; exit 1 ;;
+esac

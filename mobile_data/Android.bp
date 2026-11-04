@@ -13,11 +13,24 @@ cc_binary {
     cflags: ["-Wall", "-Wextra", "-Werror"],
     static_libs: ["libjsoncpp"],
     shared_libs: ["libcutils", "libcrypto"],
-    required: ["aera-mobile-rmtfs", "aera-mobile-tftp"],
+    required: ["aera-mobile-rmtfs", "aera-mobile-rmtfs-stock", "aera-mobile-tftp"],
 }
 
 cc_binary {
     name: "aera-mobile-rmtfs",
+    recovery: true,
+    stl: "none",
+    srcs: [":aera_rmtfs_sources", "sharedmem-uio.c", "readonly-guard.c", "rmtfs-unknown-reply.c"],
+    static_libs: ["libaera_qrtr"],
+    header_libs: ["aera_rmtfs_headers"],
+    cflags: ["-D_GNU_SOURCE", "-Wno-unused-parameter"],
+    ldflags: ["-Wl,--wrap=open,--wrap=openat,--wrap=__open_2,--wrap=__openat_2,--wrap=pwrite,--wrap=storage_init,--wrap=qrtr_open,--wrap=qmi_decode_header"],
+}
+
+// Unmodified rmtfs helper (no request-reply hooks), selectable at runtime with
+// "aera-dbg set rmtfs_bin aera-mobile-rmtfs-stock" for A/B tests.
+cc_binary {
+    name: "aera-mobile-rmtfs-stock",
     recovery: true,
     stl: "none",
     srcs: [":aera_rmtfs_sources", "sharedmem-uio.c", "readonly-guard.c"],
